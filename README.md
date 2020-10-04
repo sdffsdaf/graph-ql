@@ -1,6 +1,9 @@
 ![GraphQL Official Logo](Misc/graphqllogo.png)
 
 # GraphQL Security Toolkit
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a4a34055b4e7479c864c2b23d12007a2)](https://app.codacy.com/gh/sdffsdaf/graph-ql?utm_source=github.com&utm_medium=referral&utm_content=sdffsdaf/graph-ql&utm_campaign=Badge_Grade_Settings)
+
 With the increasing popularity of [GraphQL](https://graphql.org/) technology, we will be using this repository to publish scripts and other resources that can facilitate security testing efforts.
 
 ## GraphQL Introspection
