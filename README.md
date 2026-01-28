@@ -38,6 +38,25 @@ Terminal Output:
 
 ![Preview](Misc/Terminal_Output.png)
 
+## Sentry Integration POC
+
+The `POC.html` file provides a proof-of-concept demonstration of Sentry error tracking and session replay integration for testing purposes.
+
+**Features:**
+- ✅ Proper error handling with try-catch blocks
+- ⚠️ Graceful error reporting to Sentry
+- 🎬 Session replay integration for debugging
+- 🔒 Safe operation testing
+
+**Usage:**
+1. Open `POC.html` in a web browser
+2. Configure your Sentry DSN in the script section
+3. Use the buttons to test different scenarios:
+   - **Handled Error**: Demonstrates proper error catching and reporting
+   - **Safe Operation**: Shows successful operation execution
+
+**Note:** This replaces the previous test implementation that threw unhandled errors. All errors are now properly caught and reported to Sentry for better debugging and monitoring.
+
 ### Future Updates
 
 We are currenyly working on "porting" this script into a Burp Extension with a nice and clean GUI.
