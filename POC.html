@@ -35,9 +35,53 @@
   <h1>Sentry Session Replay – POC</h1>
 
   <button id="test-error">Trigger Test Error</button>
+  <button id="error">🔥 Browser POC Error</button>
+  <button id="attachment">📎 Error With Attachment</button>
+
 
   <script>
     document.getElementById("test-error").addEventListener("click", () => {
+
+    // Browser POC Error button
+    document.getElementById("error").addEventListener("click", () => {
+      throw new Error("🔥 Browser POC Error");
+    });
+
+    // Error with attachment button - PROPER implementation
+    document.getElementById("attachment").addEventListener("click", () => {
+      try {
+        // Use withScope to add context and attachments
+        Sentry.withScope((scope) => {
+          // Add attachment to the scope
+          scope.addAttachment({
+            filename: 'error-context.txt',
+            data: 'This is an example attachment with error context information.',
+            contentType: 'text/plain',
+          });
+
+          // Add additional context
+          scope.setTag('error_type', 'attachment_demo');
+          scope.setContext('custom_context', {
+            button_clicked: 'attachment',
+            timestamp: new Date().toISOString(),
+          });
+
+          // Create and capture the error properly
+          const error = new Error("📎 Error With Attachment");
+          
+          // Capture the exception with all the scope context and attachments
+          Sentry.captureException(error);
+          
+          console.log("✅ Error with attachment captured successfully");
+        });
+      } catch (e) {
+        // Handle any errors that occur during error reporting
+        console.error("Failed to capture error with attachment:", e);
+        // Fallback: capture the original error without attachment
+        Sentry.captureException(new Error("📎 Error With Attachment (fallback)"));
+      }
+    });
+
       throw new Error("🔥 Replay Test Error from Browser");
     });
   </script>
