@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profiling Test</title>
+    <script src="https://js.sentry-cdn.com/34b49b0e48dc786c76337185b6e373df.min.js" crossorigin="anonymous"></script>
+    <script src="https://browser.sentry-cdn.com/10.36.0/bundle.tracing.replay.debug.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>Performance Test</h1>
+    <button id="testButton">Click Me</button>
+
+    <script>
+        // Sentry initialization
+        Sentry.init({
+            dsn: 'https://34b49b0e48dc786c76337185b6e373df@sentry.io/1234567',
+            tracesSampleRate: 1.0,
+            replaysSessionSampleRate: 1.0,
+            replaysOnErrorSampleRate: 1.0,
+        });
+
+        // Initialize Web Worker for heavy computation
+        let worker = null;
+        let isProcessing = false;
+
+        function initWorker() {
+            if (!worker) {
+                worker = new Worker('worker.js');
+                
+                worker.onmessage = function(e) {
+                    console.log('Result from worker:', e.data);
+                    isProcessing = false;
+                    // Re-enable button
+                    document.getElementById('testButton').disabled = false;
+                    document.getElementById('testButton').textContent = 'Click Me';
+                };
+
+                worker.onerror = function(error) {
+                    console.error('Worker error:', error);
+                    isProcessing = false;
+                    document.getElementById('testButton').disabled = false;
+                    document.getElementById('testButton').textContent = 'Click Me';
+                };
+            }
+            return worker;
+        }
+
+        // Button click handler - now non-blocking
+        document.getElementById('testButton').onclick = function() {
+            if (isProcessing) {
+                console.log('Already processing, please wait...');
+                return;
+            }
+
+            console.log('Button clicked - starting Web Worker computation');
+            isProcessing = true;
+            
+            // Disable button and show processing state
+            this.disabled = true;
+            this.textContent = 'Processing...';
+            
+            // Initialize and use Web Worker (non-blocking)
+            const workerInstance = initWorker();
+            workerInstance.postMessage('start');
+        };
+    </script>
+</body>
+</html>
