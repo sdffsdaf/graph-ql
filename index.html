@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profiling Test</title>
+  
+  <!-- Sentry SDK -->
+  <script
+    src="https://browser.sentry-cdn.com/10.36.0/bundle.tracing.replay.debug.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    Sentry.init({
+      dsn: "https://34b49b0e48dc786c76337185b6e373df@o4510698684416000.ingest.us.sentry.io/4510783707348992",
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration()
+      ],
+      tracesSampleRate: 1.0,
+      replaysSessionSampleRate: 1.0,
+      replaysOnErrorSampleRate: 1.0,
+      profilesSampleRate: 1.0,
+    });
+  </script>
+</head>
+
+<body>
+  <h1>Performance Test</h1>
+  <button id="testButton">Click Me</button>
+
+  <script>
+    // Web Worker for heavy computation
+    // Instead of blocking the main thread, we offload computation to a worker
+    const workerCode = `
+      self.onmessage = function(e) {
+        // Perform the heavy computation in the worker thread
+        const n = e.data;
+        const sum = (n * (n + 1)) / 2;
+        
+        // Send result back to main thread
+        self.postMessage(sum);
+      };
+    `;
+    
+    // Create a Blob from the worker code and instantiate the worker
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(blob);
+    const worker = new Worker(workerUrl);
+    
+    // Handle messages from the worker
+    worker.onmessage = function(e) {
+      console.log('Calculation complete (from worker):', e.data);
+    };
+    
+    // Optimized slow function using Web Worker with chunked processing fallback
+    // Break long-running tasks into smaller chunks using requestIdleCallback
+    function slowWithChunking() {
+      const n = 100000000;
+      const chunkSize = 1000000; // Process 1M items at a time
+      let currentIndex = 0;
+      let sum = 0;
+      
+      function processChunk(deadline) {
+        // Process as much as we can in this idle period
+        while (currentIndex < n && (deadline.timeRemaining() > 0 || deadline.didTimeout)) {
+          const end = Math.min(currentIndex + chunkSize, n);
+          
+          // Calculate sum for this chunk using formula
+          // Sum from currentIndex to end = sum(1 to end) - sum(1 to currentIndex)
+          const sumToEnd = (end * (end + 1)) / 2;
+          const sumToCurrent = (currentIndex * (currentIndex + 1)) / 2;
+          sum += sumToEnd - sumToCurrent;
+          
+          currentIndex = end;
+        }
+        
+        // If there's more work, schedule it for the next idle period
+        if (currentIndex < n) {
+          requestIdleCallback(processChunk, { timeout: 1000 });
+        } else {
+          console.log('Chunked calculation complete:', sum);
+        }
+      }
+      
+      // Start processing in idle time
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(processChunk, { timeout: 1000 });
+      } else {
+        // Fallback to setTimeout if requestIdleCallback is not available
+        function processChunkTimeout() {
+          const end = Math.min(currentIndex + chunkSize, n);
+          const sumToEnd = (end * (end + 1)) / 2;
+          const sumToCurrent = (currentIndex * (currentIndex + 1)) / 2;
+          sum += sumToEnd - sumToCurrent;
+          currentIndex = end;
+          
+          if (currentIndex < n) {
+            setTimeout(processChunkTimeout, 0);
+          } else {
+            console.log('Chunked calculation complete (setTimeout):', sum);
+          }
+        }
+        processChunkTimeout();
+      }
+    }
+    
+    // Async version of slow function using Web Worker
+    // Returns a Promise that resolves when computation is complete
+    function slowAsync() {
+      return new Promise((resolve, reject) => {
+        // Create a one-time message handler for this specific request
+        const messageHandler = function(e) {
+          worker.removeEventListener('message', messageHandler);
+          resolve(e.data);
+        };
+        
+        const errorHandler = function(e) {
+          worker.removeEventListener('error', errorHandler);
+          reject(e);
+        };
+        
+        worker.addEventListener('message', messageHandler);
+        worker.addEventListener('error', errorHandler);
+        
+        // Send computation task to worker
+        const n = 100000000;
+        worker.postMessage(n);
+      });
+    }
+    
+    // Main slow function - uses Web Worker (best option)
+    function slow() {
+      // Send computation task to worker
+      const n = 100000000;
+      worker.postMessage(n);
+      
+      // Alternative: Use chunked processing
+      // slowWithChunking();
+    }
+
+    // Debounce function to prevent rapid repeated calls
+    function debounce(func, delay) {
+      let timeoutId;
+      return function(...args) {
+        // Clear previous timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        // Set new timeout
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
+    }
+
+    // Async handler function for button clicks using async/await pattern
+    async function handleButtonClick() {
+      try {
+        // Use the async version with await
+        const result = await slowAsync();
+        console.log('Async calculation result:', result);
+      } catch (error) {
+        Sentry.captureException(new Error("Profiling test"));
+      }
+    }
+
+    // Debounced version of the click handler (300ms delay)
+    const debouncedHandler = debounce(handleButtonClick, 300);
+
+    // Button click handler with debouncing
+    document.getElementById('testButton').addEventListener('click', debouncedHandler);
+  </script>
+</body>
+</html>
