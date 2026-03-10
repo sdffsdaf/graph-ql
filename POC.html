@@ -26,7 +26,7 @@
         sendDefaultPii: true,
       });
 
-      console.log("✅ Sentry + Replay initialized");
+      console.log("✅ Sentry initialized");
     };
   </script>
 </head>
@@ -34,12 +34,80 @@
 <body>
   <h1>Sentry Session Replay – POC</h1>
 
-  <button id="test-error">Trigger Test Error</button>
+  <button onclick="throwJsError()">Trigger Test Error</button>
+  <button onclick="captureManual()">Capture Manual Error</button>
 
   <script>
-    document.getElementById("test-error").addEventListener("click", () => {
-      throw new Error("🔥 Replay Test Error from Browser");
-    });
+    function throwJsError() {
+      throw new Error("🔥 Uncaught JS Error from Browser POC");
+    }
+
+    function captureManual() {
+      Sentry.captureException(new Error("🚨 Manual captured error (hackerone test)"));
+    }
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentry Replay POC</title>
+
+  <!-- Sentry Loader -->
+  <script
+    src="https://js.sentry-cdn.com/52c193564539fdeb2558e110b6a5be9b.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        dsn: "https://52c193564539fdeb2558e110b6a5be9b@o4510698684416000.ingest.us.sentry.io/4510783707348992",
+
+        integrations: [
+          Sentry.replayIntegration()
+        ],
+
+        // ⬅️ دول أهم سطرين
+        replaysSessionSampleRate: 1.0, // record every session
+        replaysOnErrorSampleRate: 1.0, // record when error happens
+
+        sendDefaultPii: true,
+      }
+
+    function captureManual() {
+      Sentry.captureException(new Error("🚨 Manual captured error (hackerone test)"));
+
+    function throwJsError() {
+      throw new Error("🔥 Uncaught JS Error from Browser POC");
+    }
+
+    function captureManual() {
+      Sentry.captureException(new Error("🚨 Manual captured error (hackerone test)"));
+    }
+
+    }
+
+      console.log("✅ Sentry initialized");
+    };
+  </script>
+</head>
+
+<body>
+  <h1>Sentry Session Replay – POC</h1>
+
+  <button onclick="throwJsError()">Trigger Test Error</button>
+  <button onclick="captureManual()">Capture Manual Error</button>
+
+  <script>
+    function throwJsError() {
+      throw new Error("🔥 Uncaught JS Error from Browser POC");
+    }
+
+    function captureManual() {
+      Sentry.captureException(new Error("🚨 Manual captured error (hackerone test)"));
+    }
   </script>
 </body>
 </html>
