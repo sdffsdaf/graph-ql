@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentry Browser POC</title>
+
+  <!-- Sentry Loader (with tracing, replay, and feedback) -->
+  <script
+    src="https://js.sentry-cdn.com/34b49b0e48dc786c76337185b6e373df.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        dsn: "https://34b49b0e48dc786c76337185b6e373df@o4510698684416000.ingest.us.sentry.io/4510783707348992",
+
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration(),
+          Sentry.feedbackIntegration(),
+        ],
+
+        tracesSampleRate: 1.0,
+        replaysSessionSampleRate: 1.0,
+        replaysOnErrorSampleRate: 1.0,
+
+        sendDefaultPii: true,
+      });
+
+      console.log("✅ Sentry initialized");
+
+      // ⏱️ Auto error fired after page load
+      window.addEventListener("load", function () {
+        try {
+          throw new Error("⏱️ Auto Error After Load");
+        } catch (e) {
+          Sentry.captureException(e);
+          console.error("Auto error captured:", e.message);
+        }
+      });
+    };
+  </script>
+</head>
+
+<body>
+  <h1>Sentry Browser POC</h1>
+
+  <!-- 📎 Button: triggers an error with an attachment -->
+  <button id="attachment">📎 Trigger Error With Attachment</button>
+
+  <!-- 🔥 Button: triggers the main POC error -->
+  <button id="error">🔥 Trigger Browser POC Error</button>
+
+  <script>
+    document.getElementById("attachment").onclick = function () {
+      try {
+        throw new Error("📎 Error With Attachment");
+      } catch (e) {
+        Sentry.withScope(function (scope) {
+          scope.addAttachment({
+            filename: "attachment.txt",
+            data: "This is a sample attachment for the error report.",
+            contentType: "text/plain",
+          });
+          Sentry.captureException(e);
+        });
+        console.error("Attachment error captured:", e.message);
+      }
+    };
+
+    document.getElementById("error").onclick = function () {
+      try {
+        throw new Error("🔥 Browser POC Error");
+      } catch (e) {
+        Sentry.captureException(e);
+        console.error("POC error captured:", e.message);
+      }
+    };
+  </script>
+</body>
+</html>
