@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentry Browser POC</title>
+
+  <!-- Sentry Loader -->
+  <script
+    src="https://js.sentry-cdn.com/34b49b0e48dc786c76337185b6e373df.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        dsn: "https://34b49b0e48dc786c76337185b6e373df@o4510698684416000.ingest.us.sentry.io/4510783707348992",
+
+        integrations: [
+          Sentry.replayIntegration(),
+          Sentry.feedbackIntegration(),
+        ],
+
+        replaysSessionSampleRate: 1.0,
+        replaysOnErrorSampleRate: 1.0,
+
+        tracesSampleRate: 1.0,
+
+        sendDefaultPii: true,
+      });
+
+      // ⏱️ Auto Error After Load
+      setTimeout(function () {
+        throw new Error("⏱️ Auto Error After Load");
+      }, 3000);
+
+      console.log("✅ Sentry initialized");
+    };
+  </script>
+</head>
+
+<body>
+  <h1>Sentry Browser POC</h1>
+
+  <button id="error">Trigger Error</button>
+  <button id="attachment">Trigger Error With Attachment</button>
+
+  <script>
+    document.getElementById("error").onclick = function () {
+      throw new Error("🔥 Browser POC Error");
+    };
+
+    document.getElementById("attachment").onclick = function () {
+      Sentry.withScope(function (scope) {
+        scope.addAttachment({
+          filename: "attachment.txt",
+          data: "This is a sample attachment sent with the Sentry error event.",
+          contentType: "text/plain",
+        });
+        throw new Error("📎 Error With Attachment");
+      });
+    };
+  </script>
+</body>
+</html>
