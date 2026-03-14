@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentry Browser POC</title>
+
+  <!-- Sentry Loader (DSN: 34b49b0e48dc786c76337185b6e373df) -->
+  <script
+    src="https://js.sentry-cdn.com/34b49b0e48dc786c76337185b6e373df.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        dsn: "https://34b49b0e48dc786c76337185b6e373df@o4510698684416000.ingest.us.sentry.io/4510783707348992",
+
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration(),
+          Sentry.feedbackIntegration(),
+        ],
+
+        tracesSampleRate: 1.0,
+        replaysSessionSampleRate: 1.0,
+        replaysOnErrorSampleRate: 1.0,
+
+        sendDefaultPii: true,
+        environment: "production",
+      });
+
+      console.log("✅ Sentry initialized");
+
+      // ⏱️ Auto Error After Load
+      window.addEventListener("load", function () {
+        Sentry.captureException(new Error("⏱️ Auto Error After Load"));
+        console.log("⏱️ Auto error captured after load");
+      });
+    };
+  </script>
+</head>
+
+<body>
+  <h1>Sentry Browser POC</h1>
+
+  <!-- Button 1: Error with Attachment -->
+  <button id="attachment">📎 Trigger Error With Attachment</button>
+
+  <!-- Button 2: POC Error -->
+  <button id="error">🔥 Trigger Browser POC Error</button>
+
+  <script>
+    document.getElementById("attachment").onclick = function () {
+      Sentry.withScope(function (scope) {
+        scope.addAttachment({
+          filename: "attachment.txt",
+          data: "This is a test attachment for the 📎 Error With Attachment event.",
+          contentType: "text/plain",
+        });
+        Sentry.captureException(new Error("📎 Error With Attachment"));
+      });
+      console.log("📎 Error with attachment captured");
+    };
+
+    document.getElementById("error").onclick = function () {
+      Sentry.captureException(new Error("🔥 Browser POC Error"));
+      console.log("🔥 Browser POC error captured");
+    };
+  </script>
+</body>
+</html>
