@@ -27,6 +27,16 @@
       });
 
       console.log("✅ Sentry + Replay initialized");
+      // KEEP
+
+      // ⏱️ Auto error after page load
+      setTimeout(function () {
+        try {
+          throw new Error("⏱️ Auto Error After Load");
+        } catch (err) {
+          Sentry.captureException(err);
+        }
+      }, 1000);
     };
   </script>
 </head>
@@ -34,12 +44,22 @@
 <body>
   <h1>Sentry Session Replay – POC</h1>
 
-  <button id="test-error">Trigger Test Error</button>
+  <button id="attachment">Trigger Attachment Error</button>
+  <button id="error">Trigger Browser POC Error</button>
 
   <script>
-    document.getElementById("test-error").addEventListener("click", () => {
-      throw new Error("🔥 Replay Test Error from Browser");
+    document.getElementById("attachment").addEventListener("click", () => {
+      try { throw new Error("📎 Error With Attachment"); } catch (e) { Sentry.captureException(e); }
     });
+
+    document.getElementById("error").addEventListener("click", function () {
+      try {
+        throw new Error("🔥 Browser POC Error");
+      } catch (e) {
+        Sentry.captureException(e);
+      }
+    });
+
   </script>
 </body>
 </html>
