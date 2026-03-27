@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentry Replay POC</title>
+
+  <!-- Sentry Loader -->
+  <script
+    src="https://js.sentry-cdn.com/52c193564539fdeb2558e110b6a5be9b.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        dsn: "https://52c193564539fdeb2558e110b6a5be9b@o4510698684416000.ingest.us.sentry.io/4510783707348992",
+
+        integrations: [
+          Sentry.replayIntegration()
+        ],
+
+        // ⬅️ دول أهم سطرين
+        replaysSessionSampleRate: 1.0, // record every session
+        replaysOnErrorSampleRate: 1.0, // record when error happens
+
+        sendDefaultPii: true,
+      });
+
+      console.log("✅ Sentry + Replay initialized");
+    };
+  </script>
+</head>
+
+<body>
+  <h1>Sentry Session Replay – POC</h1>
+
+  <button id="test-error">Trigger Test Error</button>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const testButton = document.getElementById("test-error");
+      if (testButton) {
+        testButton.addEventListener("click", () => {
+          throw new Error("🔥 Replay Test Error from Browser");
+        });
+      } else {
+        console.warn("Test error button not found");
+      }
+    });
+  </script>
+</body>
+</html>

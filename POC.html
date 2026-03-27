@@ -25,6 +25,11 @@
 
         sendDefaultPii: true,
       });
+          });
+      } else {
+        console.warn("Test error button not found");
+      }
+    });
 
       console.log("✅ Sentry + Replay initialized");
     };
@@ -37,8 +42,15 @@
   <button id="test-error">Trigger Test Error</button>
 
   <script>
-    document.getElementById("test-error").addEventListener("click", () => {
-      throw new Error("🔥 Replay Test Error from Browser");
+    document.addEventListener("DOMContentLoaded", () => {
+      const testButton = document.getElementById("test-error");
+      if (testButton) {
+        testButton.addEventListener("click", () => {
+          throw new Error("🔥 Replay Test Error from Browser");
+        });
+      } else {
+        console.warn("Test error button not found");
+      }
     });
   </script>
 </body>
